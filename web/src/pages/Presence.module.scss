@@ -1,0 +1,246 @@
+// All of these colors are inaccurate cuz color picked from screen and the player id has a blur on all the surfaces
+
+$available-color: #65b5a9;
+$ingame-color: #4c96ca;
+$away-color: #da9c75;
+$offline-color: #8b8e90;
+
+$level-text: #e8e1cd;
+$tag-text: #616568;
+$rank-text: #8e9194;
+$title-text: #5b6063;
+$text: #252627;
+
+$border-color: #8e9194aa;
+$x-padding: 22px;
+$small-font-size: 12.1pt;
+
+@mixin border-thing($prop, $height: 1px) {
+  $spc: $height * -1;
+  box-sizing: border-box;
+  border-#{$prop}: $height solid $border-color;
+
+  &::after,
+  &::before {
+    position: absolute;
+
+    #{$prop}: $spc;
+    width: 11px;
+    height: $height;
+    background: #fff;
+    display: block;
+    content: '';
+    z-index: 9999;
+  }
+  &::after {
+    right: 0px;
+    // 11px width
+  }
+  &::before {
+    left: 0px;
+    // 10px width..... >:(
+  }
+}
+.presence-container {
+  margin-top: 2em;
+  font-family: 'DIN Next W1G';
+  text-shadow: 1px 2px 2px #fffafa33;
+  user-select: none;
+  backdrop-filter: blur(2px);
+  .player-header {
+    position: relative;
+    box-sizing: border-box;
+    width: 400px;
+    height: 83px;
+
+    background: #b8bdc2ee;
+
+    padding: $x-padding;
+    display: flex;
+    flex-direction: row;
+
+    @include border-thing(top);
+    &.away {
+      @include border-thing(top, 2px); // Riot Games
+    }
+    .player-and-title {
+      width: 250px;
+      .nt-container {
+        position: relative;
+        bottom: 4px;
+        .player-name {
+          color: $text;
+          font-size: 17pt;
+          font-weight: 600;
+        }
+        .player-tag {
+          margin-left: 2px;
+          color: $tag-text;
+          font-size: $small-font-size;
+          font-weight: 400;
+        }
+      }
+      .player-title-container {
+        position: relative;
+        bottom: 9px;
+        margin-left: -5px;
+        margin-top: -2px;
+        .player-title {
+          color: $title-text;
+          font-size: $small-font-size;
+          font-weight: 400;
+          padding-left: 5px;
+          padding-top: 2px;
+        }
+      }
+    }
+    .card-container {
+      position: absolute;
+      right: 5px;
+      bottom: -3px;
+      .card-level {
+        width: 105px;
+        height: 105px;
+        position: relative;
+        .level-border {
+          width: 100px;
+          height: 100px;
+          position: absolute;
+          -webkit-user-drag: none;
+        }
+        .level-background {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          position: absolute;
+          bottom: -10px;
+          left: 5px;
+          z-index: 999;
+          width: 90px;
+          height: 40px;
+          background-size: 90px 40px;
+          background-repeat: no-repeat;
+          -webkit-user-drag: none;
+
+          .level-text {
+            position: relative;
+            top: 1px;
+            left: -1px;
+            text-align: center;
+            font-size: 11.1pt;
+            font-weight: 300;
+            color: $level-text;
+          }
+        }
+
+        .player-card {
+          width: 80px;
+          height: 80px;
+          position: absolute;
+          top: 10px;
+          left: 10px;
+          -webkit-user-drag: none;
+        }
+      }
+    }
+  }
+
+  .status-bar {
+    width: 400px;
+    height: 29px;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    align-items: center;
+    padding: 0px $x-padding;
+
+    border-bottom: 1px solid #181d21;
+
+    &.away {
+      background: $away-color;
+      border-bottom-width: 2px; // Riot Games
+    }
+    &.in-game {
+      background: $ingame-color;
+    }
+    &.available {
+      // apparently this shit is 30px tall when you are "Available", but in any other scenario it is 29px.
+      position: relative;
+      top: -1px;
+      height: 31px;
+      background: $available-color;
+    }
+    &.offline,
+    & {
+      background: $offline-color;
+      border-bottom: none;
+    }
+
+    .status-text {
+      position: relative;
+      bottom: -3px;
+      font-size: 15.7px;
+      color: #fff;
+    }
+  }
+  .rank-banner {
+    box-sizing: border-box;
+    width: 400px;
+    height: 112px;
+    background: #1d2329;
+    padding: 12px 14px;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+
+    border-top: 1px solid #181d21;
+
+    position: relative;
+
+    @include border-thing(bottom);
+    &.available {
+      @include border-thing(bottom, 2px); // Riot Games
+    }
+    &.offline {
+      height: 0px;
+      padding: 0;
+      top: -1px;
+      border-top: none;
+      * {
+        display: none;
+      }
+    }
+    .rank-image {
+      width: 87px;
+      height: 78px;
+      -webkit-user-drag: none;
+    }
+    .rank-text-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-left: 18px;
+      padding: 28px 0;
+      margin-top: 2px;
+    }
+    .rank-label {
+      text-transform: uppercase;
+      color: $rank-text;
+      font-weight: 300;
+      font-size: $small-font-size;
+      line-height: $small-font-size;
+      margin-bottom: 5px;
+    }
+    .rank-text {
+      font-family: 'Tungsten';
+      color: #ffffff;
+      font-weight: 900;
+      font-size: 32pt;
+      line-height: 32pt;
+      margin-left: -5px;
+      padding-left: 5px;
+      padding-top: 2px;
+      margin-top: -4px;
+    }
+  }
+}

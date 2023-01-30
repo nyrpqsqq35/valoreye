@@ -1,0 +1,19 @@
+{
+  "name": "shared",
+  "version": "1.2.0",
+  "description": "",
+  "main": "types.ts",
+  "types": "types.ts",
+  "scripts": {
+    "build:dev": "vite build --mode development",
+    "build:prod": "vite build --mode production",
+    "dist": "pnpm run build:prod",
+    "preview": "vite preview",
+    "dev": "vite"
+  },
+  "author": "nyrpqsqq35",
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {},
+  "dependencies": {}
+}

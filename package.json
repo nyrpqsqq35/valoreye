@@ -1,0 +1,21 @@
+{
+  "name": "valoreye",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "valoreye/",
+    "web/",
+    "shared/"
+  ],
+  "scripts": {
+    "build": "pnpm run build:dev",
+    "build:dev": "pnpm -r run build:dev",
+    "build:prod": "pnpm -r run build:prod",
+    "dist": "pnpm -F=web run dist && pnpm -F=app run dist",
+    "dev": "pnpm --stream -r run dev",
+    "copy": "copy valoreye\\dist\\index.js ..\\valoreye-back\\dist\\valoreye.js && cd ..\\valoreye-back\\ && git add dist/valoreye.js && git commit -m \"new valoreye build\" && cd ..\\valoreye\\"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.26.0"
+  }
+}

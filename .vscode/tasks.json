@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "npm",
+      "script": "watch:dev",
+      "path": "valoreye",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: watch:dev - valoreye",
+      "detail": "node scripts/build.cjs --watch"
+    },
+    {
+      "type": "npm",
+      "script": "dev",
+      "path": "web",
+      "group": "build",
+      "problemMatcher": [],
+      "label": "npm: dev - web",
+      "detail": "vite"
+    }
+  ]
+}
