@@ -28,6 +28,8 @@ import { agentsCache, competitiveTiersCache, seasonsCache } from '../cache'
 import { createLogger } from '~/util/logger'
 import { inspect } from 'util'
 import RiotRTE from './rte'
+import zlib from 'zlib'
+import { writeFileSync } from 'fs'
 
 const logger = createLogger('Riot'),
   httpLogger = createLogger('Riot/HTTP', true)
@@ -64,7 +66,7 @@ export class RiotAPI {
     if (!this.#urlBaseGlz) {
       this.#urlBaseGlz = Builders.buildGlzUrl(
         valorant.region,
-        valorant.regionFull
+        valorant.regionFull,
       )
       logger.debug('Created Valorant GLZ URL base:', this.#urlBaseGlz)
     }
@@ -132,20 +134,20 @@ export class RiotAPI {
     })
     if (!res.ok)
       throw new Error(
-        `Failure while requesting ${url} (${res.status} ${res.statusText})`
+        `Failure while requesting ${url} (${res.status} ${res.statusText})`,
       )
     const json = await res.json()
 
-    if (
-      endpoint !== '/chat/v4/presences' &&
-      endpoint !== '/entitlements/v1/token'
+    // if (
+    //   endpoint !== '/chat/v4/presences' &&
+    //   endpoint !== '/entitlements/v1/token'
+    // )
+    // very chatty
+    httpLogger.debug(
+      `GET ${endpoint} => ${res.status} ${res.statusText}\n${
+        res.status !== 200 ? inspect(json, false, 4, true) : ''
+      }\n`,
     )
-      // very chatty
-      httpLogger.debug(
-        `GET ${endpoint} => ${res.status} ${res.statusText}\n${
-          res.status !== 200 ? inspect(json, false, 4, true) : ''
-        }\n`
-      )
     return json
   }
   async postLocal<T = any>(endpoint: string, body?: any): Promise<T> {
@@ -158,7 +160,7 @@ export class RiotAPI {
     })
     if (!res.ok)
       throw new Error(
-        `Failure while requesting ${url} (${res.status} ${res.statusText})`
+        `Failure while requesting ${url} (${res.status} ${res.statusText})`,
       )
     const json = await res.json()
 
@@ -170,7 +172,7 @@ export class RiotAPI {
       httpLogger.debug(
         `POST ${endpoint} => ${res.status} ${res.statusText}\n${
           res.status !== 200 ? inspect(json, false, 4, true) : ''
-        }\n`
+        }\n`,
       )
     return json
   }
@@ -184,7 +186,7 @@ export class RiotAPI {
     })
     if (!res.ok)
       throw new Error(
-        `Failure while requesting ${url} (${res.status} ${res.statusText})`
+        `Failure while requesting ${url} (${res.status} ${res.statusText})`,
       )
     const json = await res.json()
 
@@ -196,7 +198,7 @@ export class RiotAPI {
       httpLogger.debug(
         `PUT ${endpoint} => ${res.status} ${res.statusText}\n${
           res.status !== 200 ? inspect(json, false, 4, true) : ''
-        }\n`
+        }\n`,
       )
     return json
   }
@@ -205,7 +207,7 @@ export class RiotAPI {
     base: string,
     endpoint: string,
     cache: boolean,
-    body?: any
+    body?: any,
   ): Promise<T> {
     const url = this.url(base, endpoint)
     if (cache && this.#cache.has(url)) return this.#cache.get(url)
@@ -218,7 +220,7 @@ export class RiotAPI {
       init.body = JSON.stringify(body)
     }
     const res = await fetch(url, init)
-
+    httpLogger.debug('Request to', url, 'headers=', init.headers)
     if (!res.ok) {
       const body = await res.json()
       httpLogger.debug(
@@ -226,7 +228,7 @@ export class RiotAPI {
         url,
         res.status,
         res.statusText,
-        body
+        body,
       )
       if (body.errorCode === 'BAD_CLAIMS') {
         this.#authErrors++
@@ -237,7 +239,7 @@ export class RiotAPI {
         return this.http(method, base, endpoint, cache, body)
       }
       throw new Error(
-        `Failure while requesting ${url} (${res.status} ${res.statusText})`
+        `Failure while requesting ${url} (${res.status} ${res.statusText})`,
       )
     }
     const json = await res.json()
@@ -245,7 +247,7 @@ export class RiotAPI {
       httpLogger.debug(
         `${method} ${endpoint} => ${res.status} ${res.statusText}\n${
           res.status !== 200 ? inspect(json, false, 4, true) : ''
-        }\n`
+        }\n`,
       )
     if (cache) this.#cache.set(url, json)
     return json
@@ -253,7 +255,7 @@ export class RiotAPI {
   async get<T = any>(
     base: string,
     endpoint: string,
-    cache = false
+    cache = false,
   ): Promise<T> {
     return this.http('GET', base, endpoint, cache)
   }
@@ -287,7 +289,7 @@ export class RiotAPI {
             platformOS: 'Windows',
             platformOSVersion: windowsVersion,
             platformChipset: 'Unknown',
-          })
+          }),
         ),
         'X-Riot-ClientVersion': valorant.version!,
         'User-Agent': 'ShooterGame/22 Windows/' + windowsVersion,
@@ -328,7 +330,7 @@ export class RiotAPI {
   }
 
   async getPrivatePresence(
-    playerUuid: string
+    playerUuid: string,
   ): Promise<ValorantPrivatePresence> {
     const p = await this.getPresence(playerUuid)
     if (!p) throw new Error('Player not found')
@@ -340,41 +342,41 @@ export class RiotAPI {
   async getPregameMatchId(): Promise<string> {
     const response = await this.get(
       this.urlBaseGlz,
-      '/pregame/v1/players/' + this.playerId
+      '/pregame/v1/players/' + this.playerId,
     )
     return response.MatchID as string
   }
   async getPregameMatch(matchId: string): Promise<ValorantPregameMatch> {
     const response = await this.get(
       this.urlBaseGlz,
-      '/pregame/v1/matches/' + matchId
+      '/pregame/v1/matches/' + matchId,
     )
     return response
   }
   async selectCharacter(matchId: string, character: UUID): Promise<any> {
     return this.post(
       this.urlBaseGlz,
-      `/pregame/v1/matches/${matchId}/select/${character}`
+      `/pregame/v1/matches/${matchId}/select/${character}`,
     )
   }
   async lockCharacter(matchId: string, character: UUID): Promise<any> {
     return this.post(
       this.urlBaseGlz,
-      `/pregame/v1/matches/${matchId}/lock/${character}`
+      `/pregame/v1/matches/${matchId}/lock/${character}`,
     )
   }
 
   async getCoregameMatchId(): Promise<string> {
     const response = await this.get(
       this.urlBaseGlz,
-      '/core-game/v1/players/' + this.playerId
+      '/core-game/v1/players/' + this.playerId,
     )
     return response.MatchID as string
   }
   async getCoregameMatch(matchId: string): Promise<ValorantCoregameMatch> {
     const response = await this.get(
       this.urlBaseGlz,
-      '/core-game/v1/matches/' + matchId
+      '/core-game/v1/matches/' + matchId,
     )
     return response
   }
@@ -383,7 +385,7 @@ export class RiotAPI {
   async getMMR(playerId: string): Promise<ValorantMMRReply> {
     const response = await this.get<ValorantMMRReply>(
       this.urlBasePd,
-      '/mmr/v1/players/' + playerId
+      '/mmr/v1/players/' + playerId,
     )
     return response
   }
@@ -392,8 +394,9 @@ export class RiotAPI {
     const response = await this.get<ValorantContent>(
       this.urlBaseShared,
       '/content-service/v3/content',
-      true
+      true,
     )
+    // writeFileSync('./yooo.json', JSON.stringify(response), 'utf8')
     return response
   }
 
@@ -401,7 +404,7 @@ export class RiotAPI {
   async getStorefront(playerId: string) {
     const response = await this.get(
       this.urlBasePd,
-      '/store/v2/storefront/' + playerId
+      '/store/v2/storefront/' + playerId,
     )
     return response
   }
@@ -412,11 +415,11 @@ export class RiotAPI {
   }
 
   async getStoreEntitlements<T extends ValorantItemType>(
-    itemType: T
+    itemType: T,
   ): Promise<ValorantStoreEntitlements<T>> {
     const response = await this.get(
       this.urlBasePd,
-      `/store/v1/entitlements/${this.playerId}/${itemType}`
+      `/store/v1/entitlements/${this.playerId}/${itemType}`,
     )
     return response
   }
@@ -426,11 +429,11 @@ export class RiotAPI {
    */
   async getUnlockedChars(): Promise<UUID[]> {
     const baseChars = agentsCache.filter(
-      (i) => i.isBaseContent && i.isPlayableCharacter
+      (i) => i.isBaseContent && i.isPlayableCharacter,
     )
 
     const { Entitlements } = await this.getStoreEntitlements(
-      ValorantItemType.CharacterContentType
+      ValorantItemType.CharacterContentType,
     )
     return [
       ...baseChars.map((i) => i.uuid),
@@ -450,7 +453,7 @@ export class RiotAPI {
       let players = await this.put<NameServicePlayer[]>(
         this.urlBasePd,
         '/name-service/v2/players',
-        filtered
+        filtered,
       )
       for (const p of players) {
         this.#playerNameMap.set(p.Subject, p)
@@ -502,7 +505,7 @@ export class RiotAPI {
       for (const season of Object.values(qs.SeasonalInfoBySeasonID)) {
         let peakTier = Math.max(
           0,
-          ...Object.keys(season.WinsByTier || {}).map((i) => parseInt(i))
+          ...Object.keys(season.WinsByTier || {}).map((i) => parseInt(i)),
         )
         if (peakTier >= ret.peakRank!) {
           ret.peakSeasonId = season.SeasonID
@@ -523,16 +526,15 @@ export class RiotAPI {
     if (typeof ret.peakRank === 'number') {
       const paSeason = await seasonsCache.get(ret.peakSeasonId!)
       const paCT = await competitiveTiersCache.get(
-        paSeason.competitiveTiersUuid
+        paSeason.competitiveTiersUuid,
       )!
       const tier = paCT.tiers.find((t) => t.tier === ret.peakRank!)!
       const ep = paCT.assetObjectName.match(/(\d+)/gi)![0]
-      const act = content.Seasons.find(
-        (i) => i.ID === ret.peakSeasonId!
-      )?.Name.match(/(\d+)/gi)![0]
+
+      const act = content.Seasons.find((i) => i.ID === ret.peakSeasonId!)?.Name
 
       ret.peakRankName = tier.tierName
-      ret.peakSeasonAct = `s${ep}a${act}`
+      ret.peakSeasonAct = `s${ep} ${act}`
       ret.peakRankColor = tier.color
       ret.peakBackgroundColor = tier.backgroundColor
       ret.peakSmallIcon = tier.smallIcon
@@ -546,7 +548,7 @@ export class RiotAPI {
     const privPres = await this.getPrivatePresence(this.playerId)
     return this.post(
       this.urlBaseGlz,
-      `/parties/v1/parties/${privPres.partyId}/invites/name/${displayName}/tag/${tag}`
+      `/parties/v1/parties/${privPres.partyId}/invites/name/${displayName}/tag/${tag}`,
     )
   }
 
@@ -563,7 +565,7 @@ export class RiotAPI {
   async disassociate(matchId: string): Promise<void> {
     return this.post(
       this.urlBaseGlz,
-      `/core-game/v1/players/${this.playerId}/disassociate/${matchId}`
+      `/core-game/v1/players/${this.playerId}/disassociate/${matchId}`,
     )
   }
 
@@ -572,12 +574,52 @@ export class RiotAPI {
     modified: number
     type: 'Ares.PlayerSettings'
   }> {
-    return this.getLocal('/player-preferences/v1/data-json/Ares.PlayerSettings')
+    const blacks = await this.get<{
+      data: string
+      modified: number
+      type: 'Ares.PlayerSettings'
+    }>(
+      'https://playerpreferences.riotgames.com',
+      '/playerPref/v3/getPreference/Ares.PlayerSettings',
+    )
+    if (blacks.data) {
+      const data = JSON.parse(
+        zlib
+          .inflateRawSync(Buffer.from(blacks.data, 'base64'))
+          .toString('utf8'),
+      )
+      return {
+        data,
+        type: blacks.type,
+        modified: blacks.modified,
+      }
+    }
+    return {
+      data: {
+        actionMappings: [],
+        axisMappings: [],
+        boolSettings: [],
+        floatSettings: [],
+        intSettings: [],
+        settingsProfiles: [],
+        stringSettings: [],
+        roamingSetttingsVersion: 1,
+      },
+      modified: 0,
+      type: 'Ares.PlayerSettings',
+    }
   }
   async setSettings(settings: ValorantPlayerSettings): Promise<any> {
-    return this.putLocal(
-      '/player-preferences/v1/data-json/Ares.PlayerSettings',
-      settings
+    const data = zlib
+      .deflateRawSync(Buffer.from(JSON.stringify(settings), 'utf8'))
+      .toString('base64')
+    return this.put(
+      'https://playerpreferences.riotgames.com',
+      '/playerPref/v3/savePreference',
+      {
+        type: 'Ares.PlayerSettings',
+        data,
+      },
     )
   }
 }

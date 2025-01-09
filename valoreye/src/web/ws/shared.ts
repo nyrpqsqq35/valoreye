@@ -61,7 +61,7 @@ export async function messageHandler(
       case OpCode.VPREF_UPDATED:
         {
           try {
-            publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
+            // publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
           } catch (err) {
             logger.error(
               'Error while sending VALORANT preferences to webapp',

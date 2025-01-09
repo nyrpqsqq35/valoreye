@@ -7,7 +7,7 @@ import { Ports } from '~/util/ports'
 
 import type { Router } from 'express'
 import { persistedStateStore } from '~/store/persistedState'
-
+import fs from 'fs'
 const presenceRouter: Router = express.Router()
 const logger = createLogger('ConfigProxy')
 
@@ -23,7 +23,7 @@ function cr(key: string, value: any): IReplacer {
 }
 function updateConfig(
   config: any,
-  replacers: IReplacer[]
+  replacers: IReplacer[],
 ): Record<string, any> {
   const originalValues = {}
   for (const rep of replacers) {
@@ -118,7 +118,7 @@ presenceRouter.use(async (req, res, next) => {
           headers: {
             Authorization: req.headers.authorization,
           },
-        }
+        },
       )
       const j = await r.text()
       const dec = jwt.decode(j)
@@ -137,10 +137,16 @@ presenceRouter.use(async (req, res, next) => {
           'Found affinity, new chat host is',
           newHost,
           'affinity is',
-          affinity
+          affinity,
         )
       }
     }
+    // logger.debug(req.originalUrl, config)
+    // fs.writeFileSync(
+    //   `./${new Date().valueOf()}.json`,
+    //   JSON.stringify(config, null, 2),
+    //   'utf8'
+    // )
     ore = JSON.stringify(config)
 
     // ore = ore.replace(

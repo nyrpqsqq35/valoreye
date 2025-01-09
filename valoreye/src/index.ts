@@ -439,7 +439,7 @@ async function main() {
             logger.error('Error while fetching coregame match', err)
           }
         })
-        publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
+        // publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
       }
 
       // TODO: move consistency checks to handleStateUpdate
@@ -451,7 +451,7 @@ async function main() {
         publish(OpCode.MAP_UPDATED, state.map)
         publish(OpCode.SERVER_UPDATED, state.server)
         publish(OpCode.QUEUEID_UPDATED, state.queueId)
-        publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
+        // publish(OpCode.VPREF_UPDATED, (await riot.getSettings()).data)
         global.republish = false
       }
       switch (p.sessionLoopState) {

@@ -33,7 +33,7 @@ function rdIs(): VEIS {
     }
 
     const veis = JSON.parse(
-      l1.substring(VEIS_HDR.length, l1.length - VEIS_FTR.length)
+      l1.substring(VEIS_HDR.length, l1.length - VEIS_FTR.length),
     )
     return veis
   } catch (err) {
@@ -95,6 +95,6 @@ export const persistedStateStore = create(
           },
         }
       }),
-    }
-  )
+    },
+  ),
 )
