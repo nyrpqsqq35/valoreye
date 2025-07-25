@@ -324,7 +324,7 @@ export default class LocresCache {
       "tj.qcloud.valtest-gp-2": "online2"
     }, {
       get(t,p,r) {
-        return 'fuck valorant-api'
+        return Reflect.get(t,p,r) ?? 'fuck valorant-api'
       }
     })
     
