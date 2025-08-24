@@ -24,8 +24,12 @@ export default class Cache<ItemType extends VAObject> {
       res = await fetch(url),
       json = await res.json()
     logger.debug(url, '=>', res.statusText)
-    if (json.status !== 200)
-      throw new Error(`Failed to retrieve ${uuid} for ${this.entity}`)
+    if (json.status !== 200) {
+      // Valorant-API doesnt auto-update anymore :)))))))))))))))
+      if (this.entity !== 'playercards') {
+        throw new Error(`Failed to retrieve ${uuid} for ${this.entity}`)
+      }
+    }
     return json.data as ItemType
   }
 
@@ -57,7 +61,7 @@ export default class Cache<ItemType extends VAObject> {
       }
       this.#retrievedAll = true
       logger.debug(
-        `Retrieved all items (${this.collection.size}) for ${this.constructor.name}`
+        `Retrieved all items (${this.collection.size}) for ${this.constructor.name}`,
       )
       return items
     }
@@ -66,7 +70,7 @@ export default class Cache<ItemType extends VAObject> {
   }
 
   filter(
-    pred: (value: ItemType, index: number, array: ItemType[]) => any
+    pred: (value: ItemType, index: number, array: ItemType[]) => any,
   ): ItemType[] {
     const i: ItemType[] = [...this.collection.values()].filter(pred)
     return i

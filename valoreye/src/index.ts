@@ -54,7 +54,7 @@ async function convertPlayer(
   player: ValorantPlayer,
   index: number,
   total: number,
-  ourPrivatePresence: ValorantPrivatePresence
+  ourPrivatePresence: ValorantPrivatePresence,
 ): Promise<GameDataPlayer> {
   const nsp = await riot.getNameByUUID(player.Subject)
   let presence: ValorantPrivatePresence | null = null
@@ -82,7 +82,7 @@ async function convertPlayer(
     accountLevel: player.PlayerIdentity.AccountLevel,
 
     levelBorder: await levelBordersCache.get(
-      player.PlayerIdentity.PreferredLevelBorderID
+      player.PlayerIdentity.PreferredLevelBorderID,
     ),
     playerCard: await playerCardsCache.get(player.PlayerIdentity.PlayerCardID),
     playerTitle: player.PlayerIdentity.PlayerTitleID
@@ -114,7 +114,7 @@ async function convertPlayer(
 
 function ensureConsistency(
   state: ValorantStore,
-  p: ValorantPrivatePresence
+  p: ValorantPrivatePresence,
 ): Promise<ValorantStore> {
   return new Promise(async (resolve, reject) => {
     setLoopState(p.sessionLoopState)
@@ -159,7 +159,7 @@ const TeamMap = {
 
 function getAutoLockAgent(
   state: ValorantStore,
-  teamId?: ValorantTeamID
+  teamId?: ValorantTeamID,
 ): string | undefined {
   if (typeof teamId === 'undefined') return
   if (!state.map) return
@@ -175,11 +175,11 @@ const MISSING_MATCH_ID = 'MISSING_MATCH_ID'
 
 async function handleMenus(
   state: ValorantStore,
-  presence: ValorantPrivatePresence
+  presence: ValorantPrivatePresence,
 ) {}
 async function handlePregame(
   state: ValorantStore,
-  presence: ValorantPrivatePresence
+  presence: ValorantPrivatePresence,
 ) {
   try {
     let pregameId = state.pregameId
@@ -190,7 +190,7 @@ async function handlePregame(
     const prefs = getPreferences()
     if (prefs.autoLockAgent.enabled && flagEn(Flag.ENABLE_AUTOLOCK)) {
       let player = match.AllyTeam.Players.find(
-        (i) => i.Subject === riot.playerId
+        (i) => i.Subject === riot.playerId,
       )
       if (player) {
         if (
@@ -199,7 +199,7 @@ async function handlePregame(
         ) {
           // Fuck
           const correctTeam = state.players.find(
-            (i) => i.id === player?.Subject && i.teamId
+            (i) => i.id === player?.Subject && i.teamId,
           )?.teamId
           const foundAutoLockAgentId = getAutoLockAgent(state, correctTeam)
           logger.debug(
@@ -207,7 +207,7 @@ async function handlePregame(
             foundAutoLockAgentId,
             player,
             state.map,
-            pregameId
+            pregameId,
           )
           if (foundAutoLockAgentId) {
             process.nextTick(
@@ -217,21 +217,21 @@ async function handlePregame(
                 // const autoLockAgent = AgentIds[prefs.autoLockAgent.agent!]!
                 if (foundAutoLockAgentId === 'random') {
                   foundAutoLockAgentId = randomItem(
-                    await riot.getUnlockedChars()
+                    await riot.getUnlockedChars(),
                   )
                 }
                 logger.log(
                   'Selecting character for map =',
                   state.map?.displayName,
                   'team =',
-                  correctTeam
+                  correctTeam,
                 )
                 await riot.selectCharacter(pregameId, foundAutoLockAgentId)
                 logger.log('Locking character')
                 await riot.lockCharacter(pregameId, foundAutoLockAgentId)
               },
               pregameId,
-              foundAutoLockAgentId
+              foundAutoLockAgentId,
             )
           }
         }
@@ -245,7 +245,7 @@ async function handlePregame(
         p,
         index,
         match.AllyTeam.Players.length,
-        presence
+        presence,
       )
       gdp.teamId = match.AllyTeam.TeamID
       addPlayer(gdp)
@@ -264,7 +264,7 @@ async function handlePregame(
 }
 async function handleInGame(
   state: ValorantStore,
-  presence: ValorantPrivatePresence
+  presence: ValorantPrivatePresence,
 ) {
   try {
     let coregameId = state.coregameId
@@ -309,12 +309,12 @@ async function handleStateUpdate(state: ValorantStore, prev: ValorantStore) {
   if (state.players.length) {
     if (state.players.length > prev.players.length) {
       let newPlayers = state.players.filter(
-        (i) => prev.players.findIndex((x) => x.id === i.id) === -1
+        (i) => prev.players.findIndex((x) => x.id === i.id) === -1,
       )
       newPlayers.forEach((p) => publish(OpCode.PLAYER_ADDED, p))
     } else if (state.players.length < prev.players.length) {
       let oldPlayers = prev.players.filter(
-        (i) => state.players.findIndex((x) => x.id === i.id) !== -1
+        (i) => state.players.findIndex((x) => x.id === i.id) !== -1,
       )
       oldPlayers.forEach((p) => publish(OpCode.PLAYER_REMOVED, p))
     } else {
@@ -359,7 +359,7 @@ async function main() {
       if (tasklist.includes('RiotClientServices.exe')) {
         if (!persistedStateStore.getState().chatContext.host) {
           logger.error(
-            'Riot Client is already running, please close VALORANT/Riot Client before starting valoreye again'
+            'Riot Client is already running, please close VALORANT/Riot Client before starting valoreye again',
           )
           // process.exit(0)
         }
@@ -385,7 +385,7 @@ async function main() {
         switch (err.code) {
           case 'ENOENT':
             logger.warn(
-              'Waiting for Riot Client/VALORANT (missing RC lockfile, game not started)'
+              'Waiting for Riot Client/VALORANT (missing RC lockfile, game not started)',
             )
             await sleep(1500)
             break
@@ -475,7 +475,7 @@ async function main() {
         logger.warn(
           `Waiting for VALORANT (${
             ready ? 'is VALORANT running?' : 'still starting'
-          })`
+          })`,
         )
       else logger.error('Error occurred while processing game data', err)
       if (++failures > 30_000 / 1500) {
