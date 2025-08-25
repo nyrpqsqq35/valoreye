@@ -27,7 +27,7 @@ export default class Cache<ItemType extends VAObject> {
     if (json.status !== 200) {
       // Valorant-API doesnt auto-update anymore :)))))))))))))))
       if (this.entity !== 'playercards') {
-        throw new Error(`Failed to retrieve ${uuid} for ${this.entity}`)
+        // throw new Error(`Failed to retrieve ${uuid} for ${this.entity}`)
       }
     }
     return json.data as ItemType
